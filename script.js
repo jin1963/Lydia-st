@@ -1,4 +1,3 @@
-
 let web3;
 let contract;
 let accounts = [];
@@ -26,25 +25,35 @@ window.addEventListener("load", async () => {
     accounts = await web3.eth.getAccounts();
     contract = new web3.eth.Contract(contractABI, contractAddress);
     const tokenAddress = await contract.methods.token().call();
-    tokenContract = new web3.eth.Contract([{
-      "constant": false,
-      "inputs": [{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],
-      "name":"approve",
-      "outputs":[{"name":"","type":"bool"}],
-      "type":"function"
-    }, {
-      "constant": true,
-      "inputs": [{"name":"owner","type":"address"},{"name":"spender","type":"address"}],
-      "name":"allowance",
-      "outputs":[{"name":"","type":"uint256"}],
-      "type":"function"
-    }, {
-      "constant": true,
-      "inputs":[{"name":"owner","type":"address"}],
-      "name":"balanceOf",
-      "outputs":[{"name":"","type":"uint256"}],
-      "type":"function"
-    }], tokenAddress);
+    tokenContract = new web3.eth.Contract([
+      {
+        "constant": false,
+        "inputs": [
+          { "name": "spender", "type": "address" },
+          { "name": "amount", "type": "uint256" }
+        ],
+        "name": "approve",
+        "outputs": [{ "name": "", "type": "bool" }],
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          { "name": "owner", "type": "address" },
+          { "name": "spender", "type": "address" }
+        ],
+        "name": "allowance",
+        "outputs": [{ "name": "", "type": "uint256" }],
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [{ "name": "owner", "type": "address" }],
+        "name": "balanceOf",
+        "outputs": [{ "name": "", "type": "uint256" }],
+        "type": "function"
+      }
+    ], tokenAddress);
 
     document.getElementById("app").innerHTML = `
       <div id="notification"></div>
@@ -88,7 +97,10 @@ async function stake() {
 
   const allowance = await tokenContract.methods.allowance(accounts[0], contract.options.address).call();
   if (BigInt(allowance) < BigInt(amountWei)) {
-    await tokenContract.methods.approve(contract.options.address, "115792089237316195423570985008687907853269984665640564039457584007913129639935").send({ from: accounts[0], gas: 300000 });
+    await tokenContract.methods.approve(
+      contract.options.address,
+      "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+    ).send({ from: accounts[0], gas: 300000 });
     notify("🟢 Status: Approved – You can now stake", "success");
   }
 
@@ -119,17 +131,13 @@ async function refreshDashboard() {
   const secondsLeft = unlockTime - timeNow;
   const countdown = secondsLeft > 0 ? secondsLeft + " sec" : "Unlocked";
 
-  const apy = ((parseFloat(web3.utils.fromWei(rewardPerSec)) * 86400 * 365) / parseFloat(web3.utils.fromWei(stakeInfo.amount))) * 100;
-    document.getElementById("dashboard").innerHTML = `
-      <p><strong>Staked:</strong> ${web3.utils.fromWei(stakeInfo.amount)} LYDIA</p>
-      <p><strong>Reward:</strong> ${web3.utils.fromWei(reward)} LYDIA</p>
-      <p><strong>Reward/sec:</strong> ${web3.utils.fromWei(rewardPerSec)} LYDIA</p>
-      <p><strong>APY (est):</strong> ${apy.toFixed(2)}%</p>
-      <p><strong>Unlocks in:</strong> ${countdown}</p>
-    `;
+  const apy = ((parseFloat(web3.utils.fromWei(rewardPerSec)) * 86400 * 365) / parseFloat(web3.utils.fromWei(stakeInfo.amount) || 1)) * 100;
+
+  document.getElementById("dashboard").innerHTML = `
     <p><strong>Staked:</strong> ${web3.utils.fromWei(stakeInfo.amount)} LYDIA</p>
     <p><strong>Reward:</strong> ${web3.utils.fromWei(reward)} LYDIA</p>
     <p><strong>Reward/sec:</strong> ${web3.utils.fromWei(rewardPerSec)} LYDIA</p>
+    <p><strong>APY (est):</strong> ${apy.toFixed(2)}%</p>
     <p><strong>Unlocks in:</strong> ${countdown}</p>
   `;
 
@@ -151,9 +159,7 @@ function drawTVLChart() {
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true
-        }
+        y: { beginAtZero: true }
       }
     }
   });
