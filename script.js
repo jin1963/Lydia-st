@@ -1,8 +1,9 @@
+
 let web3;
 let contract;
 let accounts = [];
 let tokenContract;
-let selectedTierDays = 180;
+let selectedTierDays = null; // เปลี่ยนจาก 180 เป็น null เพื่อบังคับให้เลือกก่อน
 
 function notify(message, type = "info") {
   const el = document.getElementById("notification");
@@ -50,8 +51,7 @@ window.addEventListener("load", async () => {
         "constant": true,
         "inputs": [{ "name": "owner", "type": "address" }],
         "name": "balanceOf",
-        "outputs": [{ "name": "", "type": "uint256" }],
-        "type": "function"
+        "outputs": [{ "name": "", "type": "uint256" }]
       }
     ], tokenAddress);
 
@@ -77,21 +77,30 @@ window.addEventListener("load", async () => {
 });
 
 function selectTier(days) {
-  selectedTierDays = days;
-  notify("Selected Tier: " + days + " days", "info");
+  const confirmTier = confirm("คุณต้องการเลือก Tier " + days + " วันใช่หรือไม่?");
+  if (confirmTier) {
+    selectedTierDays = days;
+    notify("Selected Tier: " + days + " days", "success");
+  } else {
+    notify("ยกเลิกการเลือก Tier", "error");
+  }
 }
 
 async function stake() {
   const amount = document.getElementById("amount").value;
+  if (!selectedTierDays) {
+    notify("❌ กรุณาเลือก Tier ก่อน stake", "error");
+    return;
+  }
   if (!amount || parseFloat(amount) <= 0) {
-    notify("❌ Please enter a valid amount to stake.", "error");
+    notify("❌ กรุณาใส่จำนวนเหรียญที่ต้องการ stake", "error");
     return;
   }
 
   const tokenBalance = await tokenContract.methods.balanceOf(accounts[0]).call();
   const amountWei = web3.utils.toWei(amount, "ether");
   if (BigInt(amountWei) > BigInt(tokenBalance)) {
-    notify("❌ Insufficient balance to stake.", "error");
+    notify("❌ เหรียญในกระเป๋าไม่เพียงพอ", "error");
     return;
   }
 
@@ -101,23 +110,23 @@ async function stake() {
       contract.options.address,
       "115792089237316195423570985008687907853269984665640564039457584007913129639935"
     ).send({ from: accounts[0], gas: 300000 });
-    notify("🟢 Status: Approved – You can now stake", "success");
+    notify("🟢 Status: Approved – พร้อม Stake แล้ว", "success");
   }
 
   await contract.methods.stake(amountWei).send({ from: accounts[0], gas: 300000 });
-  notify("✅ Stake Success!", "success");
+  notify("✅ Stake สำเร็จแล้ว!", "success");
   refreshDashboard();
 }
 
 async function claim() {
   await contract.methods.claimReward().send({ from: accounts[0], gas: 150000 });
-  notify("🎉 Reward claimed successfully!", "success");
+  notify("🎉 Claim Reward สำเร็จ!", "success");
   refreshDashboard();
 }
 
 async function withdraw() {
   await contract.methods.withdraw().send({ from: accounts[0], gas: 250000 });
-  notify("✅ Withdraw successful!", "success");
+  notify("✅ Withdraw สำเร็จ", "success");
   refreshDashboard();
 }
 
