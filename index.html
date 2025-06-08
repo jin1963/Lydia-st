@@ -62,6 +62,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js"></script>
   <script src="abi.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js"></script><script>
+  if (typeof contractABI === "undefined" || typeof contractAddress === "undefined") {
+    document.getElementById("app").innerHTML = "<p style='color:red;'>❌ ไม่สามารถโหลด Smart Contract ได้ กรุณาตรวจสอบไฟล์ abi.js หรือ contractAddress</p>";
+  }
+</script>
 </body>
 </html>
